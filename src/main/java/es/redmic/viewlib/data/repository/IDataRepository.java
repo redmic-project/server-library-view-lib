@@ -19,13 +19,13 @@ import es.redmic.viewlib.common.repository.IBaseRepository;
 public interface IDataRepository<TModel extends BaseES<?>, TQueryDTO extends SimpleQueryDTO>
 		extends IBaseRepository<TModel> {
 
+	// R
+
 	public DataHitWrapper<?> findById(String id);
 
-	public DataSearchWrapper<?> searchByIds(String[] ids);
+	public List<String> suggest(TQueryDTO queryDTO);
 
 	public DataHitsWrapper<?> mget(MgetDTO dto);
 
 	public DataSearchWrapper<?> find(TQueryDTO queryDTO);
-
-	public List<String> suggest(TQueryDTO queryDTO);
 }
