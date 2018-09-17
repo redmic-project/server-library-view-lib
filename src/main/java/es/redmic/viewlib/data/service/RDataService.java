@@ -16,13 +16,12 @@ import es.redmic.models.es.common.query.dto.MgetDTO;
 import es.redmic.models.es.common.query.dto.SimpleQueryDTO;
 import es.redmic.models.es.data.common.model.DataSearchWrapper;
 import es.redmic.viewlib.common.dto.MetaDTO;
-import es.redmic.viewlib.common.service.IBaseService;
 import es.redmic.viewlib.common.service.RBaseService;
 import es.redmic.viewlib.config.MapperScanBeanItfc;
 import es.redmic.viewlib.data.repository.IDataRepository;
 
 public abstract class RDataService<TModel extends BaseES<?>, TDTO extends CommonDTO, TQueryDTO extends SimpleQueryDTO>
-		extends RBaseService<TModel, TDTO, TQueryDTO> implements IBaseService<TModel, TDTO, TQueryDTO> {
+		extends RBaseService<TModel, TDTO, TQueryDTO> implements IDataService<TModel, TDTO, TQueryDTO> {
 
 	IDataRepository<TModel, TQueryDTO> repository;
 
