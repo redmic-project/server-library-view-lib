@@ -4,7 +4,7 @@ import java.util.List;
 
 import es.redmic.models.es.common.query.dto.MgetDTO;
 import es.redmic.models.es.common.query.dto.SimpleQueryDTO;
-import es.redmic.models.es.geojson.common.model.Feature;
+import es.redmic.models.es.geojson.base.Feature;
 import es.redmic.models.es.geojson.common.model.GeoHitWrapper;
 import es.redmic.models.es.geojson.common.model.GeoHitsWrapper;
 import es.redmic.models.es.geojson.common.model.GeoSearchWrapper;
