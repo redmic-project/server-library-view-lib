@@ -18,7 +18,7 @@ import es.redmic.models.es.common.model.BaseES;
 import es.redmic.models.es.common.query.dto.MgetDTO;
 import es.redmic.models.es.common.query.dto.SimpleQueryDTO;
 import es.redmic.viewlib.common.controller.RController;
-import es.redmic.viewlib.common.dto.MetaDTO;
+import es.redmic.viewlib.data.dto.MetaDTO;
 import es.redmic.viewlib.data.service.IDataService;
 
 public abstract class DataController<TModel extends BaseES<?>, TDTO extends CommonDTO, TQueryDTO extends SimpleQueryDTO>

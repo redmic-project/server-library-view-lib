@@ -1,4 +1,4 @@
-package es.redmic.viewlib.common.dto;
+package es.redmic.viewlib.data.dto;
 
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaIgnore;

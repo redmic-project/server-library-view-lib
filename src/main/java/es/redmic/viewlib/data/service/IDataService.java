@@ -6,8 +6,8 @@ import java.util.Set;
 
 import es.redmic.models.es.common.dto.JSONCollectionDTO;
 import es.redmic.models.es.common.query.dto.MgetDTO;
-import es.redmic.viewlib.common.dto.MetaDTO;
 import es.redmic.viewlib.common.service.IBaseService;
+import es.redmic.viewlib.data.dto.MetaDTO;
 
 public abstract interface IDataService<TModel, TDTO, TQueryDTO> extends IBaseService<TModel, TDTO, TQueryDTO> {
 
