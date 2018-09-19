@@ -2,18 +2,18 @@ package es.redmic.viewlib.geodata.service;
 
 import java.util.List;
 
-import es.redmic.brokerlib.avro.common.CommonDTO;
+import es.redmic.brokerlib.avro.geodata.common.FeatureDTO;
 import es.redmic.models.es.common.dto.AggregationsDTO;
 import es.redmic.models.es.common.query.dto.MgetDTO;
 import es.redmic.models.es.common.query.dto.SimpleQueryDTO;
 import es.redmic.models.es.geojson.base.Feature;
 import es.redmic.models.es.geojson.common.dto.GeoJSONFeatureCollectionDTO;
-import es.redmic.models.es.geojson.common.model.GeoSearchWrapper;
-import es.redmic.viewlib.common.dto.MetaDTO;
+import es.redmic.models.es.geojson.wrapper.GeoSearchWrapper;
 import es.redmic.viewlib.common.service.RBaseService;
+import es.redmic.viewlib.geodata.dto.GeoMetaDTO;
 import es.redmic.viewlib.geodata.repository.IGeoDataRepository;
 
-public abstract class RGeoDataService<TModel extends Feature<?, ?>, TDTO extends CommonDTO, TQueryDTO extends SimpleQueryDTO>
+public abstract class RGeoDataService<TModel extends Feature<?, ?>, TDTO extends FeatureDTO<?, ?>, TQueryDTO extends SimpleQueryDTO>
 		extends RBaseService<TModel, TDTO, TQueryDTO> implements IGeoDataService<TModel, TDTO, TQueryDTO> {
 
 	IGeoDataRepository<TModel, TQueryDTO> repository;
@@ -23,12 +23,12 @@ public abstract class RGeoDataService<TModel extends Feature<?, ?>, TDTO extends
 	}
 
 	@Override
-	public MetaDTO<?> findById(String id, String parentId) {
+	public GeoMetaDTO<?> findById(String id, String parentId) {
 
 		// TODO: comprobar mediante microservicio de credenciales que este usuario puede
 		// buscar
 
-		return mapper.getMapperFacade().map(repository.findById(id), MetaDTO.class, getMappingContext());
+		return mapper.getMapperFacade().map(repository.findById(id), GeoMetaDTO.class, getMappingContext());
 	}
 
 	@Override
@@ -56,7 +56,7 @@ public abstract class RGeoDataService<TModel extends Feature<?, ?>, TDTO extends
 		// TODO: comprobar mediante microservicio de credenciales que este usuario puede
 		// buscar
 
-		GeoSearchWrapper<?, ?> result = repository.find(query);
+		GeoSearchWrapper<?> result = repository.find(query);
 
 		GeoJSONFeatureCollectionDTO collection = mapper.getMapperFacade().map(result.getHits(),
 				GeoJSONFeatureCollectionDTO.class);
