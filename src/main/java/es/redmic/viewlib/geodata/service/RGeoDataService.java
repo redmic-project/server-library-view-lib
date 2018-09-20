@@ -59,7 +59,7 @@ public abstract class RGeoDataService<TModel extends Feature<?, ?>, TDTO extends
 		GeoSearchWrapper<?> result = repository.find(query);
 
 		GeoJSONFeatureCollectionDTO collection = mapper.getMapperFacade().map(result.getHits(),
-				GeoJSONFeatureCollectionDTO.class);
+				GeoJSONFeatureCollectionDTO.class, getMappingContext());
 
 		if (result.getAggregations() != null) {
 			collection.set_aggs(
