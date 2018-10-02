@@ -26,6 +26,7 @@ import es.redmic.models.es.common.view.JsonViewsForQueryDTO;
 import es.redmic.models.es.common.view.JsonViewsForQueryDTO.ViewClassInterface;
 import es.redmic.models.es.utils.JacksonFieldUtils;
 import es.redmic.restlib.common.service.UserUtilsServiceItfc;
+import es.redmic.viewlib.config.MapperScanBeanItfc;
 import ma.glasnost.orika.MappingContext;
 
 public abstract class RBaseService<TModel extends BaseES<?>, TDTO extends CommonDTO, TQueryDTO extends SimpleQueryDTO> {
@@ -40,6 +41,9 @@ public abstract class RBaseService<TModel extends BaseES<?>, TDTO extends Common
 
 	@Autowired
 	protected ObjectMapper objectMapper;
+
+	@Autowired
+	protected MapperScanBeanItfc mapper;
 
 	@Autowired
 	UserUtilsServiceItfc userService;

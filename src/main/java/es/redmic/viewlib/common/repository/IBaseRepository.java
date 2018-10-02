@@ -11,6 +11,8 @@ import es.redmic.models.es.common.model.BaseES;
 
 public interface IBaseRepository<TModel extends BaseES<?>> {
 
+	// W
+
 	public EventApplicationResult save(TModel modelToIndex);
 
 	public EventApplicationResult update(TModel modelToIndex);

@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 
 import es.redmic.models.es.common.dto.JSONCollectionDTO;
 import es.redmic.models.es.data.common.model.DataHitsWrapper;
-import es.redmic.viewlib.common.dto.MetaDTO;
+import es.redmic.viewlib.data.dto.MetaDTO;
 import ma.glasnost.orika.CustomMapper;
 import ma.glasnost.orika.MappingContext;
 
