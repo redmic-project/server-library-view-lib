@@ -86,7 +86,7 @@ public abstract class RController<TModel extends BaseES<?>, TDTO extends CommonD
 
 	protected void publishFailedEvent(Event event, String topic) {
 
-		logger.info("sending FailedEvent='{}' to topic='{}'", event, topic);
+		logger.error("sending FailedEvent='{}' to topic='{}'", event, topic);
 
 		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(topic, event.getAggregateId(), event);
 
