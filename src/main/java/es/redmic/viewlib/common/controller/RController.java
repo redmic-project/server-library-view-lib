@@ -95,7 +95,7 @@ public abstract class RController<TModel extends BaseES<?>, TDTO extends CommonD
 
 	protected void publishConfirmedEvent(Event event, String topic) {
 
-		logger.info("sending ConfirmEvent='{}' to topic='{}'", event, topic);
+		logger.debug("sending ConfirmEvent='{}' to topic='{}'", event, topic);
 
 		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(topic, event.getAggregateId(), event);
 
