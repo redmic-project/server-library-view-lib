@@ -1,8 +1,9 @@
 package es.redmic.viewlib.geodata.dto;
 
+import org.locationtech.jts.geom.Geometry;
+
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.kjetland.jackson.jsonSchema.annotations.JsonSchemaIgnore;
-import com.vividsolutions.jts.geom.Geometry;
 
 import es.redmic.brokerlib.avro.geodata.common.FeatureDTO;
 import es.redmic.brokerlib.avro.geodata.common.PropertiesBaseDTO;
