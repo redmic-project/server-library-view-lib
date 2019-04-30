@@ -12,14 +12,14 @@
 	<groupId>es.redmic.lib</groupId>
 	<artifactId>view-lib</artifactId>
 	<packaging>jar</packaging>
-	<version>0.10.0</version>
+	<version>0.10.0-feature-atlasMicroservice</version>
 	<name>view-lib</name>
 	
 	<properties>
 		<!-- REDMIC -->
 		<redmic.rest-lib.version>0.9.0</redmic.rest-lib.version>
 		<redmic.models.version>0.9.1</redmic.models.version>
-		<redmic.broker-lib.version>0.8.0</redmic.broker-lib.version>
+		<redmic.broker-lib.version>0.10.0-feature-atlasMicroservice</redmic.broker-lib.version>
 		
 		<!-- OTHERS -->
 		<ma.glasnost.orika.core.version>1.5.2</ma.glasnost.orika.core.version>
