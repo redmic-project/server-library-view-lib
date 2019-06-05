@@ -22,7 +22,6 @@
 		<redmic.broker-lib.version>0.10.0-feature-atlasMicroservice</redmic.broker-lib.version>
 		
 		<!-- OTHERS -->
-		<ma.glasnost.orika.core.version>1.5.2</ma.glasnost.orika.core.version>
 	</properties>
 
 	<dependencies>
@@ -42,13 +41,6 @@
 			<groupId>es.redmic.lib</groupId>
 			<artifactId>broker-lib</artifactId>
 			<version>${redmic.broker-lib.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>ma.glasnost.orika</groupId>
-			<artifactId>orika-core</artifactId>
-			<version>${ma.glasnost.orika.core.version}</version>
-			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 	<repositories>
