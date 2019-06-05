@@ -20,31 +20,33 @@ package es.redmic.viewlib.common.mapper.es2dto;
  * #L%
  */
 
-import org.springframework.stereotype.Component;
+import org.locationtech.jts.geom.Geometry;
 
-import es.redmic.exception.common.ExceptionType;
-import es.redmic.exception.common.InternalException;
+import es.redmic.brokerlib.avro.geodata.common.FeatureDTO;
+import es.redmic.brokerlib.avro.geodata.common.PropertiesBaseDTO;
+import es.redmic.models.es.common.model.BaseES;
 import es.redmic.models.es.geojson.common.dto.GeoJSONFeatureCollectionDTO;
-import es.redmic.models.es.geojson.wrapper.GeoHitsWrapper;
-import es.redmic.viewlib.geodata.dto.GeoMetaDTO;
-import ma.glasnost.orika.CustomMapper;
-import ma.glasnost.orika.MappingContext;
+import es.redmic.models.es.geojson.common.model.GeoHitsWrapper;
+import es.redmic.models.es.geojson.common.model.GeoSearchWrapper;
 
-@SuppressWarnings("rawtypes")
-@Component
-public class FeatureCollectionMapper extends CustomMapper<GeoHitsWrapper, GeoJSONFeatureCollectionDTO> {
+public abstract class FeatureCollectionESMapper<TDTO extends FeatureDTO<PropertiesBaseDTO, Geometry>, TModel extends BaseES<?>>
+		extends FeatureESMapper<TDTO, TModel> {
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public void mapAtoB(GeoHitsWrapper a, GeoJSONFeatureCollectionDTO b, MappingContext context) {
+	@SuppressWarnings("rawtypes")
+	public GeoJSONFeatureCollectionDTO map(GeoSearchWrapper geoSearchWrapper) {
 
-		Class<?> targetTypeDto = (Class<?>) context.getProperty("targetTypeDto");
+		GeoJSONFeatureCollectionDTO result = map(geoSearchWrapper.getHits());
+		result.set_aggs(getAggs(geoSearchWrapper));
+		return result;
+	}
 
-		if (targetTypeDto == null)
-			throw new InternalException(ExceptionType.INTERNAL_EXCEPTION);
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public GeoJSONFeatureCollectionDTO map(GeoHitsWrapper geoHitsWrapper) {
 
-		b.setFeatures(mapperFacade.mapAsList(a.getHits(), GeoMetaDTO.class, context));
-		b.get_meta().setMax_score(a.getMax_score());
-		b.setTotal(a.getTotal());
+		GeoJSONFeatureCollectionDTO result = new GeoJSONFeatureCollectionDTO();
+		result.setFeatures(mapList(geoHitsWrapper.getHits()));
+		result.get_meta().setMax_score(geoHitsWrapper.getMax_score());
+		result.setTotal(geoHitsWrapper.getTotal());
+		return result;
 	}
 }

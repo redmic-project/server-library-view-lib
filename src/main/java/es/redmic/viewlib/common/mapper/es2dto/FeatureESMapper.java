@@ -20,34 +20,35 @@ package es.redmic.viewlib.common.mapper.es2dto;
  * #L%
  */
 
-import org.springframework.stereotype.Component;
+import java.util.ArrayList;
+import java.util.List;
 
-import es.redmic.exception.common.ExceptionType;
-import es.redmic.exception.common.InternalException;
-import es.redmic.models.es.common.dto.MetaDataDTO;
+import org.locationtech.jts.geom.Geometry;
+
+import es.redmic.brokerlib.avro.geodata.common.FeatureDTO;
+import es.redmic.brokerlib.avro.geodata.common.PropertiesBaseDTO;
+import es.redmic.models.es.common.model.BaseES;
 import es.redmic.models.es.geojson.wrapper.GeoHitWrapper;
 import es.redmic.viewlib.geodata.dto.GeoMetaDTO;
-import ma.glasnost.orika.CustomMapper;
-import ma.glasnost.orika.MappingContext;
 
-@SuppressWarnings("rawtypes")
-@Component
-public class FeatureMapper extends CustomMapper<GeoHitWrapper, GeoMetaDTO> {
+public abstract class FeatureESMapper<TDTO extends FeatureDTO<PropertiesBaseDTO, Geometry>, TModel extends BaseES<?>>
+		extends BaseESMapper<TDTO, TModel> {
 
-	@Override
-	public void mapAtoB(GeoHitWrapper a, GeoMetaDTO b, MappingContext context) {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public List<GeoMetaDTO<TDTO>> mapList(List<GeoHitWrapper> geoHitWrapper) {
 
-		Class<?> targetTypeDto = (Class<?>) context.getProperty("targetTypeDto");
+		List<GeoMetaDTO<TDTO>> list = new ArrayList<GeoMetaDTO<TDTO>>();
+		for (GeoHitWrapper<TModel> entity : geoHitWrapper) {
+			list.add(map(entity));
+		}
+		return list;
+	}
 
-		if (targetTypeDto == null)
-			throw new InternalException(ExceptionType.INTERNAL_EXCEPTION);
+	public GeoMetaDTO<TDTO> map(GeoHitWrapper<TModel> geoHitWrapper) {
 
-		MetaDataDTO _meta = new MetaDataDTO();
-
-		_meta.setScore(a.get_score());
-		_meta.setVersion(a.get_version());
-		_meta.setHighlight(a.getHighlight());
-
-		b.set_meta(_meta);
+		GeoMetaDTO<TDTO> result = new GeoMetaDTO<TDTO>();
+		result.set_meta(getMetaDataDTO(geoHitWrapper));
+		result.set_source(mapSource(geoHitWrapper.get_source()));
+		return result;
 	}
 }

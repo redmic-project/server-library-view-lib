@@ -20,27 +20,33 @@ package es.redmic.viewlib.common.mapper.es2dto;
  * #L%
  */
 
-import org.springframework.stereotype.Component;
+import java.util.ArrayList;
+import java.util.List;
 
-import es.redmic.models.es.common.dto.MetaDataDTO;
+import es.redmic.brokerlib.avro.common.CommonDTO;
+import es.redmic.models.es.common.model.BaseES;
 import es.redmic.models.es.data.common.model.DataHitWrapper;
 import es.redmic.viewlib.data.dto.MetaDTO;
-import ma.glasnost.orika.CustomMapper;
-import ma.glasnost.orika.MappingContext;
 
-@SuppressWarnings("rawtypes")
-@Component
-public class DataItemESMapper extends CustomMapper<DataHitWrapper, MetaDTO> {
+public abstract class DataItemESMapper<TDTO extends CommonDTO, TModel extends BaseES<?>>
+		extends BaseESMapper<TDTO, TModel> {
 
-	@Override
-	public void mapAtoB(DataHitWrapper a, MetaDTO b, MappingContext context) {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public List<MetaDTO<TDTO>> mapList(List<DataHitWrapper> dataHitWrapper) {
 
-		MetaDataDTO _meta = new MetaDataDTO();
+		List<MetaDTO<TDTO>> list = new ArrayList<MetaDTO<TDTO>>();
+		for (DataHitWrapper<TModel> entity : dataHitWrapper) {
+			list.add(map(entity));
+		}
+		return list;
+	}
 
-		_meta.setScore(a.get_score());
-		_meta.setVersion(a.get_version());
-		_meta.setHighlight(a.getHighlight());
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public MetaDTO map(DataHitWrapper dataHitWrapper) {
 
-		b.set_meta(_meta);
+		MetaDTO<TDTO> result = new MetaDTO<TDTO>();
+		result.set_meta(getMetaDataDTO(dataHitWrapper));
+		result.set_source(mapSource((TModel) dataHitWrapper.get_source()));
+		return result;
 	}
 }
