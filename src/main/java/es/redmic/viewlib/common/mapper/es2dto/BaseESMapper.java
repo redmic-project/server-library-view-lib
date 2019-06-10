@@ -1,5 +1,8 @@
 package es.redmic.viewlib.common.mapper.es2dto;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /*-
  * #%L
  * view-lib
@@ -47,8 +50,18 @@ public abstract class BaseESMapper<TDTO extends CommonDTO, TModel extends BaseES
 		if (wrapper.getAggregations() == null || wrapper.getAggregations().getAttributes().isEmpty())
 			return aggs;
 
-		aggs.setAttributes(wrapper.getAggregations().getAttributes());
+		Map<String, Object> attrs = new HashMap<>();
+
+		wrapper.getAggregations().getAttributes().keySet().stream()
+				.forEach(key -> attrs.put(getAggField(key), wrapper.getAggregations().getAttributes().get(key)));
+
+		aggs.setAttributes(attrs);
 
 		return aggs;
+	}
+
+	private String getAggField(String key) {
+		String[] keySplitted = key.split("#");
+		return keySplitted.length == 2 ? keySplitted[1] : key;
 	}
 }
