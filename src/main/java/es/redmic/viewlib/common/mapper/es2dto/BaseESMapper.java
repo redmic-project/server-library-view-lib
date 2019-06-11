@@ -50,14 +50,23 @@ public abstract class BaseESMapper<TDTO extends CommonDTO, TModel extends BaseES
 		if (wrapper.getAggregations() == null || wrapper.getAggregations().getAttributes().isEmpty())
 			return aggs;
 
-		Map<String, Object> attrs = new HashMap<>();
-
-		wrapper.getAggregations().getAttributes().keySet().stream()
-				.forEach(key -> attrs.put(getAggField(key), wrapper.getAggregations().getAttributes().get(key)));
-
-		aggs.setAttributes(attrs);
+		aggs.setAttributes(getCleanAttributes(wrapper.getAggregations().getAttributes()));
 
 		return aggs;
+	}
+
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> getCleanAttributes(Map<String, Object> source) {
+
+		Map<String, Object> attrs = new HashMap<>();
+
+		source.keySet().stream()
+				.forEach(key -> attrs.put(getAggField(key),
+						((source.get(key) instanceof HashMap)
+								? getCleanAttributes((Map<String, Object>) source.get(key))
+								: source.get(key))));
+
+		return attrs;
 	}
 
 	private String getAggField(String key) {
