@@ -27,8 +27,6 @@ import es.redmic.usersettingslib.model.Settings;
 import es.redmic.viewlib.common.mapper.es2dto.DataCollectionESMapper;
 
 @Mapper
-// @ConditionalOnProperty(name = "redmic.user-settings.enabled", havingValue =
-// "true")
 public abstract class SettingsESMapper extends DataCollectionESMapper<SettingsDTO, Settings> {
 
 	public abstract SettingsDTO map(Settings model);
