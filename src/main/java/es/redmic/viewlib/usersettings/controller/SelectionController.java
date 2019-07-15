@@ -67,7 +67,11 @@ public class SelectionController extends DataController<Settings, SettingsDTO, S
 		EventApplicationResult result = null;
 
 		try {
-			result = service.update(Mappers.getMapper(SettingsESMapper.class).map(event.getSettings()));
+
+			if (event.getSettings().getInserted().equals(event.getSettings().getUpdated()))
+				result = service.save(Mappers.getMapper(SettingsESMapper.class).map(event.getSettings()));
+			else
+				result = service.update(Mappers.getMapper(SettingsESMapper.class).map(event.getSettings()));
 		} catch (Exception e) {
 			e.printStackTrace();
 			publishFailedEvent(SettingsEventFactory.getEvent(event, SettingsEventTypes.SELECT_FAILED,
@@ -136,7 +140,10 @@ public class SelectionController extends DataController<Settings, SettingsDTO, S
 		EventApplicationResult result = null;
 
 		try {
-			result = service.update(Mappers.getMapper(SettingsESMapper.class).map(event.getSettings()));
+			if (event.getSettings().getInserted().equals(event.getSettings().getUpdated()))
+				result = service.save(Mappers.getMapper(SettingsESMapper.class).map(event.getSettings()));
+			else
+				result = service.update(Mappers.getMapper(SettingsESMapper.class).map(event.getSettings()));
 		} catch (Exception e) {
 			e.printStackTrace();
 			publishFailedEvent(SettingsEventFactory.getEvent(event, SettingsEventTypes.SAVE_FAILED,
