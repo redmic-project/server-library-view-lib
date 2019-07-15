@@ -30,7 +30,8 @@ import es.redmic.viewlib.data.repository.IDataRepository;
 
 @Repository
 @ConditionalOnProperty(name = "redmic.user-settings.enabled", havingValue = "true")
-public class SettingsRepository extends SettingsRepositoryImpl implements IDataRepository<Settings, SimpleQueryDTO> {
+public class SettingsRepository extends SettingsRepositoryImpl<Settings, SimpleQueryDTO>
+		implements IDataRepository<Settings, SimpleQueryDTO> {
 
 	public SettingsRepository() {
 		super();
