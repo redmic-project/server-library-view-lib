@@ -179,7 +179,7 @@ public abstract class SettingsEventHandlerBase extends IntegrationTestBase {
 	@Test
 	public void sendSaveSettingsEvent_SaveSettings_IfEventIsOk() throws Exception {
 
-		SaveSettingsEvent event = SettingsDataUtil.getSaveEvent();
+		SaveSettingsEvent event = SettingsDataUtil.getSaveSettingsEvent();
 
 		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(SETTINGS_TOPIC, event.getAggregateId(),
 				event);
@@ -209,9 +209,10 @@ public abstract class SettingsEventHandlerBase extends IntegrationTestBase {
 	@Test(expected = ItemNotFoundException.class)
 	public void sendDeleteSettingsEvent_DeleteSettings_IfEventIsOk() throws Exception {
 
-		DeleteSettingsEvent event = SettingsDataUtil.getDeleteEvent();
+		DeleteSettingsEvent event = SettingsDataUtil.getDeleteSettingsEvent();
 
-		repository.save(Mappers.getMapper(SettingsESMapper.class).map(SettingsDataUtil.getSavedEvent().getSettings()));
+		repository.save(
+				Mappers.getMapper(SettingsESMapper.class).map(SettingsDataUtil.getSettingsSavedEvent().getSettings()));
 
 		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(SETTINGS_TOPIC, event.getAggregateId(),
 				event);
@@ -274,7 +275,7 @@ public abstract class SettingsEventHandlerBase extends IntegrationTestBase {
 	@Test
 	public void sendSaveSettingsEvent_PublishSaveSettingsFailedEvent_IfItemNotFound() throws Exception {
 
-		SaveSettingsEvent event = SettingsDataUtil.getSaveEvent();
+		SaveSettingsEvent event = SettingsDataUtil.getSaveSettingsEvent();
 		event.getSettings().setUpdated(DateTime.now().plus(20));
 
 		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(SETTINGS_TOPIC, event.getAggregateId(),
