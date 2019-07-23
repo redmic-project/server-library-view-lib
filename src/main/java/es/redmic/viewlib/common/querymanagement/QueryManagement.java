@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
 import es.redmic.models.es.common.view.QueryDTODeserializerModifier;
-import es.redmic.restlib.common.service.UserUtilsServiceItfc;
+import es.redmic.restlib.config.UserService;
 
 @Component
 public class QueryManagement {
@@ -40,7 +40,7 @@ public class QueryManagement {
 	ObjectMapper objectMapper;
 
 	@Autowired
-	UserUtilsServiceItfc userService;
+	UserService userService;
 
 	@Bean
 	public SimpleModule queryDTOJsonViewModule() {
