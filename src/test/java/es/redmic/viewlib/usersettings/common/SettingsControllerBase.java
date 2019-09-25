@@ -92,7 +92,8 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 
 		// @formatter:off
 		
-		this.mockMvc.perform(get(SETTINGS_PATH + "/" + settings.getId()).accept(MediaType.APPLICATION_JSON))
+		this.mockMvc.perform(get(SETTINGS_PATH + "/" + settings.getId())
+				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success", is(true)))
 			.andExpect(jsonPath("$.body", notNullValue()))
@@ -110,7 +111,9 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 		// @formatter:off
 		
 		this.mockMvc
-				.perform(post(SETTINGS_PATH + "/_search").content(mapper.writeValueAsString(dataQuery))
+				.perform(post(SETTINGS_PATH + "/_search")
+					.header("Authorization", "Bearer " + getTokenOAGUser())	
+					.content(mapper.writeValueAsString(dataQuery))
 					.contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.success", is(true)))
@@ -118,6 +121,23 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 				.andExpect(jsonPath("$.body.data[0]", notNullValue()))
 				.andExpect(jsonPath("$.body.data.length()", is(1)))
 					.andDo(getSimpleQueryFieldsDescriptor());
+		
+		// @formatter:on
+	}
+
+	@Test
+	public void searchSettingsPost_ReturnUnauthorized_IfUserIsNotLoggedIn() throws Exception {
+
+		SimpleQueryDTO dataQuery = new SimpleQueryDTO();
+		dataQuery.setSize(1);
+
+		// @formatter:off
+		
+		this.mockMvc
+				.perform(post(SETTINGS_PATH + "/_search")
+					.content(mapper.writeValueAsString(dataQuery))
+					.contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isUnauthorized());
 		
 		// @formatter:on
 	}
@@ -132,7 +152,9 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 					.param("fields", "{name}")
 					.param("text", settings.getName())
 					.param("from", "0")
-					.param("size", "1").accept(MediaType.APPLICATION_JSON))
+					.param("size", "1")
+					.header("Authorization", "Bearer " + getTokenOAGUser())
+					.accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.success", is(true)))
 				.andExpect(jsonPath("$.body.data", notNullValue()))
@@ -141,6 +163,23 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 					.andDo(getSearchSimpleParametersDescription());
 		
 		// @formatter:off
+	}
+	
+	@Test
+	public void searchSettingsQueryString_ReturnUnauthorized_IfUserIsNotLoggedIn() throws Exception {
+
+		// @formatter:off
+		
+		this.mockMvc
+		.perform(get(SETTINGS_PATH)
+				.param("fields", "{name}")
+				.param("text", settings.getName())
+				.param("from", "0")
+				.param("size", "1")
+				.accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isUnauthorized());
+		
+		// @formatter:on
 	}
 
 	@Test
@@ -153,7 +192,9 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 		// @formatter:off
 		
 		this.mockMvc
-			.perform(post(SETTINGS_PATH + "/_mget").content(mapper.writeValueAsString(mgetQuery))
+			.perform(post(SETTINGS_PATH + "/_mget")
+					.header("Authorization", "Bearer " + getTokenOAGUser())
+					.content(mapper.writeValueAsString(mgetQuery))
 					.contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.success", is(true)))
@@ -162,6 +203,24 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 				.andExpect(jsonPath("$.body.data[0].id", is(settings.getId())))
 				.andExpect(jsonPath("$.body.data.length()", is(1)))
 					.andDo(getMgetRequestDescription());
+		
+		// @formatter:on
+	}
+
+	@Test
+	public void mgetSettings_ReturnUnauthorized_IfUserIsNotLoggedIn() throws Exception {
+
+		MgetDTO mgetQuery = new MgetDTO();
+		mgetQuery.setIds(Arrays.asList(settings.getId()));
+		mgetQuery.setFields(Arrays.asList("id"));
+
+		// @formatter:off
+		
+		this.mockMvc
+			.perform(post(SETTINGS_PATH + "/_mget")
+					.content(mapper.writeValueAsString(mgetQuery))
+					.contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isUnauthorized());
 		
 		// @formatter:on
 	}
@@ -176,6 +235,7 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 					.param("fields", new String[] { "name" })
 					.param("text", settings.getName())
 					.param("size", "1")
+						.header("Authorization", "Bearer " + getTokenOAGUser())
 						.accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.success", is(true)))
@@ -184,6 +244,25 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 				.andExpect(jsonPath("$.body[0]", startsWith("<b>")))
 				.andExpect(jsonPath("$.body[0]", endsWith("</b>")))
 					.andDo(getSuggestParametersDescription());
+		
+		// @formatter:on
+	}
+
+	@Test
+	public void suggestSettingsQueryString_ReturnUnauthorized_IfUserIsNotLoggedIn() throws Exception {
+
+		SimpleQueryDTO dataQuery = new SimpleQueryDTO();
+		dataQuery.setSize(1);
+
+		// @formatter:off
+		
+		this.mockMvc
+			.perform(get(SETTINGS_PATH + "/_suggest")
+				.param("fields", new String[] { "name" })
+				.param("text", settings.getName())
+				.param("size", "1")
+					.accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isUnauthorized());
 		
 		// @formatter:on
 	}
@@ -198,7 +277,9 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 		// @formatter:off
 		
 		this.mockMvc
-			.perform(post(SETTINGS_PATH + "/_suggest").content(mapper.writeValueAsString(dataQuery))
+			.perform(post(SETTINGS_PATH + "/_suggest")
+					.header("Authorization", "Bearer " + getTokenOAGUser())
+					.content(mapper.writeValueAsString(dataQuery))
 					.contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.success", is(true)))
@@ -208,6 +289,24 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 				.andExpect(jsonPath("$.body[0]", endsWith("</b>")))
 					.andDo(getSimpleQueryFieldsDescriptor());;
 				
+		// @formatter:on
+	}
+
+	@Test
+	public void suggestSettingsPost_ReturnUnauthorized_IfUserIsNotLoggedIn() throws Exception {
+
+		SimpleQueryDTO dataQuery = new SimpleQueryDTO();
+		dataQuery.setSize(1);
+		dataQuery.createSimpleQueryDTOFromSuggestQueryParams(new String[] { "name" }, settings.getName(), 1);
+
+		// @formatter:off
+		
+		this.mockMvc
+			.perform(post(SETTINGS_PATH + "/_suggest")
+					.content(mapper.writeValueAsString(dataQuery))
+					.contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
+				.andExpect(status().isUnauthorized());
+		
 		// @formatter:on
 	}
 }
