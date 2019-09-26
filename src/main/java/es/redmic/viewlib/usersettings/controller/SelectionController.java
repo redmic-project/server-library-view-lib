@@ -1,6 +1,12 @@
 package es.redmic.viewlib.usersettings.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.validation.Valid;
+
 import org.mapstruct.factory.Mappers;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 /*-
@@ -27,11 +33,22 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import es.redmic.exception.common.ExceptionType;
+import es.redmic.exception.databinding.DTONotValidException;
+import es.redmic.models.es.common.dto.ElasticSearchDTO;
 import es.redmic.models.es.common.dto.EventApplicationResult;
+import es.redmic.models.es.common.dto.JSONCollectionDTO;
+import es.redmic.models.es.common.dto.SuperDTO;
 import es.redmic.models.es.common.query.dto.SimpleQueryDTO;
+import es.redmic.restlib.config.UserService;
 import es.redmic.usersettingslib.dto.SettingsDTO;
 import es.redmic.usersettingslib.events.SettingsEventFactory;
 import es.redmic.usersettingslib.events.SettingsEventTypes;
@@ -41,7 +58,7 @@ import es.redmic.usersettingslib.events.deselect.DeselectEvent;
 import es.redmic.usersettingslib.events.save.SaveSettingsEvent;
 import es.redmic.usersettingslib.events.select.SelectEvent;
 import es.redmic.usersettingslib.model.Settings;
-import es.redmic.viewlib.data.controller.DataController;
+import es.redmic.viewlib.common.controller.RController;
 import es.redmic.viewlib.usersettings.mapper.SettingsESMapper;
 import es.redmic.viewlib.usersettings.service.SelectionService;
 
@@ -49,10 +66,13 @@ import es.redmic.viewlib.usersettings.service.SelectionService;
 @ConditionalOnProperty(name = "redmic.user-settings.enabled", havingValue = "true")
 @RequestMapping(value = "${controller.mapping.SETTINGS}")
 @KafkaListener(topics = "${broker.topic.settings}")
-public class SelectionController extends DataController<Settings, SettingsDTO, SimpleQueryDTO> {
+public class SelectionController extends RController<Settings, SettingsDTO, SimpleQueryDTO> {
 
 	@Value("${broker.topic.settings}")
 	private String settings_topic;
+
+	@Autowired
+	UserService userService;
 
 	SelectionService service;
 
@@ -185,5 +205,69 @@ public class SelectionController extends DataController<Settings, SettingsDTO, S
 
 	@KafkaHandler(isDefault = true)
 	public void listenDefualt(Object event) {
+	}
+
+	// REST
+
+	@RequestMapping(value = "", method = RequestMethod.GET)
+	@ResponseBody
+	public SuperDTO _search(@RequestParam(required = false, value = "fields") String[] fields,
+			@RequestParam(required = false, value = "text") String text,
+			@RequestParam(required = false, value = "from") Integer from,
+			@RequestParam(required = false, value = "size") Integer size) {
+
+		Map<String, Object> newFixedQuery = new HashMap<String, Object>();
+		newFixedQuery.put("userId", userService.getUserId());
+
+		return new ElasticSearchDTO(service.find(fields, text, from, size, newFixedQuery, fieldsExcludedOnQuery));
+	}
+
+	@RequestMapping(value = "/_search", method = RequestMethod.POST)
+	@ResponseBody
+	public SuperDTO _advancedSearch(@Valid @RequestBody SimpleQueryDTO queryDTO, BindingResult bindingResult) {
+
+		if (bindingResult != null && bindingResult.hasErrors())
+			throw new DTONotValidException(bindingResult);
+
+		Map<String, Object> newFixedQuery = new HashMap<String, Object>();
+		newFixedQuery.put("userId", userService.getUserId());
+
+		return new ElasticSearchDTO(service.find(queryDTO, newFixedQuery, fieldsExcludedOnQuery));
+	}
+
+	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
+	@ResponseBody
+	public SuperDTO _get(@PathVariable("id") String id) {
+
+		Map<String, Object> newFixedQuery = new HashMap<String, Object>();
+		newFixedQuery.put("userId", userService.getUserId());
+		newFixedQuery.put("id", id);
+
+		JSONCollectionDTO result = service.find(new SimpleQueryDTO(), newFixedQuery, fieldsExcludedOnQuery);
+
+		if (result.getTotal() == 1)
+			return new ElasticSearchDTO(result.getData().get(0), 1);
+		return new ElasticSearchDTO(null, 0);
+	}
+
+	@RequestMapping(value = "/_suggest", method = RequestMethod.GET)
+	@ResponseBody
+	public SuperDTO _suggest(@RequestParam(required = false, value = "fields") String[] fields,
+			@RequestParam("text") String text, @RequestParam(required = false, value = "size") Integer size) {
+
+		Map<String, Object> newFixedQuery = new HashMap<String, Object>();
+		newFixedQuery.put("userId", userService.getUserId());
+
+		return new ElasticSearchDTO(service.suggest(fields, text, size, newFixedQuery, fieldsExcludedOnQuery));
+	}
+
+	@RequestMapping(value = "/_suggest", method = RequestMethod.POST)
+	@ResponseBody
+	public SuperDTO _advancedSuggest(@Valid @RequestBody SimpleQueryDTO queryDTO, BindingResult bindingResult) {
+
+		Map<String, Object> newFixedQuery = new HashMap<String, Object>();
+		newFixedQuery.put("userId", userService.getUserId());
+
+		return new ElasticSearchDTO(service.suggest(queryDTO, newFixedQuery, fieldsExcludedOnQuery));
 	}
 }

@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Arrays;
+import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import es.redmic.models.es.common.query.dto.MgetDTO;
 import es.redmic.models.es.common.query.dto.SimpleQueryDTO;
 import es.redmic.testutils.documentation.DocumentationViewBaseTest;
 import es.redmic.usersettingslib.dto.SettingsDTO;
@@ -60,7 +59,15 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 	@Autowired
 	SettingsRepository repository;
 
-	SettingsDTO settings = new SettingsDTO();
+	SettingsDTO settings;
+
+	SettingsDTO settingsWork;
+
+	SettingsDTO settingsOtherService;
+
+	SettingsDTO settingsOtherUser;
+
+	SettingsDTO settingsUserNotLoggedIn;
 
 	@Override
 	@Before
@@ -68,7 +75,27 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 
 		settings = SettingsDataUtil.getSettingsDTO();
 
+		settingsWork = SettingsDataUtil.getSettingsDTO(UUID.randomUUID().toString());
+		settingsWork.setName(null);
+
+		settingsOtherService = SettingsDataUtil.getSettingsDTO(UUID.randomUUID().toString());
+		settingsOtherService.setService("prueba");
+
+		settingsOtherUser = SettingsDataUtil.getSettingsDTO(UUID.randomUUID().toString());
+		settingsOtherUser.setUserId("999");
+
+		settingsUserNotLoggedIn = SettingsDataUtil.getSettingsDTO(UUID.randomUUID().toString());
+		settingsUserNotLoggedIn.setUserId("1");
+
 		repository.save(Mappers.getMapper(SettingsESMapper.class).map(settings));
+
+		repository.save(Mappers.getMapper(SettingsESMapper.class).map(settingsWork));
+
+		repository.save(Mappers.getMapper(SettingsESMapper.class).map(settingsOtherService));
+
+		repository.save(Mappers.getMapper(SettingsESMapper.class).map(settingsOtherUser));
+
+		repository.save(Mappers.getMapper(SettingsESMapper.class).map(settingsUserNotLoggedIn));
 
 		// @formatter:off
 		
@@ -85,6 +112,10 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 	@After
 	public void clean() {
 		repository.delete(settings.getId());
+		repository.delete(settingsWork.getId());
+		repository.delete(settingsOtherService.getId());
+		repository.delete(settingsOtherUser.getId());
+		repository.delete(settingsUserNotLoggedIn.getId());
 	}
 
 	@Test
@@ -92,12 +123,12 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 
 		// @formatter:off
 		
-		this.mockMvc.perform(get(SETTINGS_PATH + "/" + settings.getId())
+		this.mockMvc.perform(get(SETTINGS_PATH + "/" + settingsUserNotLoggedIn.getId())
 				.accept(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.success", is(true)))
 			.andExpect(jsonPath("$.body", notNullValue()))
-			.andExpect(jsonPath("$.body.id", is(settings.getId())));
+			.andExpect(jsonPath("$.body.id", is(settingsUserNotLoggedIn.getId())));
 		
 		// @formatter:on
 	}
@@ -106,7 +137,7 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 	public void searchSettingsPost_Return200_WhenSearchIsCorrect() throws Exception {
 
 		SimpleQueryDTO dataQuery = new SimpleQueryDTO();
-		dataQuery.setSize(1);
+		dataQuery.setSize(10);
 
 		// @formatter:off
 		
@@ -129,7 +160,7 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 	public void searchSettingsPost_ReturnUnauthorized_IfUserIsNotLoggedIn() throws Exception {
 
 		SimpleQueryDTO dataQuery = new SimpleQueryDTO();
-		dataQuery.setSize(1);
+		dataQuery.setSize(10);
 
 		// @formatter:off
 		
@@ -152,7 +183,7 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 					.param("fields", "{name}")
 					.param("text", settings.getName())
 					.param("from", "0")
-					.param("size", "1")
+					.param("size", "10")
 					.header("Authorization", "Bearer " + getTokenOAGUser())
 					.accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
@@ -175,51 +206,8 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 				.param("fields", "{name}")
 				.param("text", settings.getName())
 				.param("from", "0")
-				.param("size", "1")
+				.param("size", "10")
 				.accept(MediaType.APPLICATION_JSON))
-				.andExpect(status().isUnauthorized());
-		
-		// @formatter:on
-	}
-
-	@Test
-	public void mgetSettings_Return200_WhenSettingsExists() throws Exception {
-
-		MgetDTO mgetQuery = new MgetDTO();
-		mgetQuery.setIds(Arrays.asList(settings.getId()));
-		mgetQuery.setFields(Arrays.asList("id"));
-
-		// @formatter:off
-		
-		this.mockMvc
-			.perform(post(SETTINGS_PATH + "/_mget")
-					.header("Authorization", "Bearer " + getTokenOAGUser())
-					.content(mapper.writeValueAsString(mgetQuery))
-					.contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.success", is(true)))
-				.andExpect(jsonPath("$.body.data", notNullValue()))
-				.andExpect(jsonPath("$.body.data[0]", notNullValue()))
-				.andExpect(jsonPath("$.body.data[0].id", is(settings.getId())))
-				.andExpect(jsonPath("$.body.data.length()", is(1)))
-					.andDo(getMgetRequestDescription());
-		
-		// @formatter:on
-	}
-
-	@Test
-	public void mgetSettings_ReturnUnauthorized_IfUserIsNotLoggedIn() throws Exception {
-
-		MgetDTO mgetQuery = new MgetDTO();
-		mgetQuery.setIds(Arrays.asList(settings.getId()));
-		mgetQuery.setFields(Arrays.asList("id"));
-
-		// @formatter:off
-		
-		this.mockMvc
-			.perform(post(SETTINGS_PATH + "/_mget")
-					.content(mapper.writeValueAsString(mgetQuery))
-					.contentType(MediaType.APPLICATION_JSON).accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isUnauthorized());
 		
 		// @formatter:on
@@ -234,7 +222,7 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 			.perform(get(SETTINGS_PATH + "/_suggest")
 					.param("fields", new String[] { "name" })
 					.param("text", settings.getName())
-					.param("size", "1")
+					.param("size", "10")
 						.header("Authorization", "Bearer " + getTokenOAGUser())
 						.accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk())
@@ -252,7 +240,7 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 	public void suggestSettingsQueryString_ReturnUnauthorized_IfUserIsNotLoggedIn() throws Exception {
 
 		SimpleQueryDTO dataQuery = new SimpleQueryDTO();
-		dataQuery.setSize(1);
+		dataQuery.setSize(10);
 
 		// @formatter:off
 		
@@ -260,7 +248,7 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 			.perform(get(SETTINGS_PATH + "/_suggest")
 				.param("fields", new String[] { "name" })
 				.param("text", settings.getName())
-				.param("size", "1")
+				.param("size", "10")
 					.accept(MediaType.APPLICATION_JSON))
 				.andExpect(status().isUnauthorized());
 		
@@ -271,8 +259,8 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 	public void suggestSettingsPost_Return200_WhenSuggestIsCorrect() throws Exception {
 
 		SimpleQueryDTO dataQuery = new SimpleQueryDTO();
-		dataQuery.setSize(1);
-		dataQuery.createSimpleQueryDTOFromSuggestQueryParams(new String[] { "name" }, settings.getName(), 1);
+		dataQuery.setSize(10);
+		dataQuery.createSimpleQueryDTOFromSuggestQueryParams(new String[] { "name" }, settings.getName(), 10);
 
 		// @formatter:off
 		
@@ -296,8 +284,8 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 	public void suggestSettingsPost_ReturnUnauthorized_IfUserIsNotLoggedIn() throws Exception {
 
 		SimpleQueryDTO dataQuery = new SimpleQueryDTO();
-		dataQuery.setSize(1);
-		dataQuery.createSimpleQueryDTOFromSuggestQueryParams(new String[] { "name" }, settings.getName(), 1);
+		dataQuery.setSize(10);
+		dataQuery.createSimpleQueryDTOFromSuggestQueryParams(new String[] { "name" }, settings.getName(), 10);
 
 		// @formatter:off
 		
