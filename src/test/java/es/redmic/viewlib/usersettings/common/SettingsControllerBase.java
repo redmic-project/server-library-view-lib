@@ -119,7 +119,7 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 	}
 
 	@Test
-	public void getCategory_Return200_WhenItemExist() throws Exception {
+	public void getSettings_Return200_WhenItemExist() throws Exception {
 
 		// @formatter:off
 		
@@ -129,6 +129,22 @@ public class SettingsControllerBase extends DocumentationViewBaseTest {
 			.andExpect(jsonPath("$.success", is(true)))
 			.andExpect(jsonPath("$.body", notNullValue()))
 			.andExpect(jsonPath("$.body.id", is(settingsUserNotLoggedIn.getId())));
+		
+		// @formatter:on
+	}
+
+	@Test
+	public void getSettingsWork_Return200_WhenItemExist() throws Exception {
+
+		// @formatter:off
+		
+		this.mockMvc.perform(get(SETTINGS_PATH + "/" + settingsWork.getId())
+				.header("Authorization", "Bearer " + getTokenOAGUser())
+				.accept(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.success", is(true)))
+			.andExpect(jsonPath("$.body", notNullValue()))
+			.andExpect(jsonPath("$.body.id", is(settingsWork.getId())));
 		
 		// @formatter:on
 	}
