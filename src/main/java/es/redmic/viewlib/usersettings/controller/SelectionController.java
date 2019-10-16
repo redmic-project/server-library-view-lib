@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import es.redmic.exception.common.ExceptionType;
+import es.redmic.exception.data.ItemNotFoundException;
 import es.redmic.exception.databinding.DTONotValidException;
 import es.redmic.models.es.common.dto.ElasticSearchDTO;
 import es.redmic.models.es.common.dto.EventApplicationResult;
@@ -218,7 +219,7 @@ public class SelectionController extends RController<Settings, SettingsDTO, Simp
 
 		Map<String, Object> newFixedQuery = new HashMap<String, Object>();
 		newFixedQuery.put("userId", userService.getUserId());
-
+		newFixedQuery.put("name", null);
 		return new ElasticSearchDTO(service.find(fields, text, from, size, newFixedQuery, fieldsExcludedOnQuery));
 	}
 
@@ -231,7 +232,7 @@ public class SelectionController extends RController<Settings, SettingsDTO, Simp
 
 		Map<String, Object> newFixedQuery = new HashMap<String, Object>();
 		newFixedQuery.put("userId", userService.getUserId());
-
+		newFixedQuery.put("name", null);
 		return new ElasticSearchDTO(service.find(queryDTO, newFixedQuery, fieldsExcludedOnQuery));
 	}
 
@@ -247,7 +248,7 @@ public class SelectionController extends RController<Settings, SettingsDTO, Simp
 
 		if (result.getTotal() == 1)
 			return new ElasticSearchDTO(result.getData().get(0), 1);
-		return new ElasticSearchDTO(null, 0);
+		throw new ItemNotFoundException(id, id);
 	}
 
 	@RequestMapping(value = "/_suggest", method = RequestMethod.GET)
@@ -257,7 +258,7 @@ public class SelectionController extends RController<Settings, SettingsDTO, Simp
 
 		Map<String, Object> newFixedQuery = new HashMap<String, Object>();
 		newFixedQuery.put("userId", userService.getUserId());
-
+		newFixedQuery.put("name", null);
 		return new ElasticSearchDTO(service.suggest(fields, text, size, newFixedQuery, fieldsExcludedOnQuery));
 	}
 
@@ -267,7 +268,7 @@ public class SelectionController extends RController<Settings, SettingsDTO, Simp
 
 		Map<String, Object> newFixedQuery = new HashMap<String, Object>();
 		newFixedQuery.put("userId", userService.getUserId());
-
+		newFixedQuery.put("name", null);
 		return new ElasticSearchDTO(service.suggest(queryDTO, newFixedQuery, fieldsExcludedOnQuery));
 	}
 }
