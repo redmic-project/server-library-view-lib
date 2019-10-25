@@ -41,6 +41,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import es.redmic.brokerlib.avro.fail.RollbackFailedEvent;
 import es.redmic.exception.common.ExceptionType;
 import es.redmic.exception.data.ItemNotFoundException;
 import es.redmic.exception.databinding.DTONotValidException;
@@ -56,12 +57,13 @@ import es.redmic.usersettingslib.events.SettingsEventTypes;
 import es.redmic.usersettingslib.events.clearselection.ClearSelectionEvent;
 import es.redmic.usersettingslib.events.delete.DeleteSettingsEvent;
 import es.redmic.usersettingslib.events.deselect.DeselectEvent;
+import es.redmic.usersettingslib.events.fail.SettingsRollbackEvent;
 import es.redmic.usersettingslib.events.save.SaveSettingsEvent;
 import es.redmic.usersettingslib.events.select.SelectEvent;
 import es.redmic.usersettingslib.model.Settings;
 import es.redmic.viewlib.common.controller.RController;
 import es.redmic.viewlib.usersettings.mapper.SettingsESMapper;
-import es.redmic.viewlib.usersettings.service.SelectionService;
+import es.redmic.viewlib.usersettings.service.SettingsService;
 
 @Controller
 @ConditionalOnProperty(name = "redmic.user-settings.enabled", havingValue = "true")
@@ -75,9 +77,9 @@ public class SelectionController extends RController<Settings, SettingsDTO, Simp
 	@Autowired
 	UserService userService;
 
-	SelectionService service;
+	SettingsService service;
 
-	public SelectionController(SelectionService service) {
+	public SelectionController(SettingsService service) {
 		super(service);
 		this.service = service;
 	}
@@ -201,6 +203,31 @@ public class SelectionController extends RController<Settings, SettingsDTO, Simp
 		} else {
 			publishFailedEvent(SettingsEventFactory.getEvent(event, SettingsEventTypes.DELETE_FAILED,
 					result.getExeptionType(), result.getExceptionArguments()), settings_topic);
+		}
+	}
+
+	@KafkaHandler
+	public void listen(SettingsRollbackEvent event) {
+
+		EventApplicationResult result = null;
+
+		try {
+
+			result = service.rollback(Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem()),
+					event.getAggregateId());
+		} catch (Exception e) {
+			e.printStackTrace();
+			publishFailedEvent(new RollbackFailedEvent(event.getFailEventType()).buildFrom(event), settings_topic);
+			return;
+		}
+
+		if (result.isSuccess()) {
+			publishConfirmedEvent(
+					SettingsEventFactory.getEvent(event,
+							SettingsEventTypes.getEventFailedTypeByActionType(event.getFailEventType())),
+					settings_topic);
+		} else {
+			publishFailedEvent(new RollbackFailedEvent(event.getFailEventType()).buildFrom(event), settings_topic);
 		}
 	}
 

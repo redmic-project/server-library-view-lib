@@ -39,9 +39,9 @@ import es.redmic.viewlib.usersettings.repository.SettingsRepository;
 
 @Service
 @ConditionalOnProperty(name = "redmic.user-settings.enabled", havingValue = "true")
-public class SelectionService extends RWDataService<Settings, SettingsDTO, SimpleQueryDTO> {
+public class SettingsService extends RWDataService<Settings, SettingsDTO, SimpleQueryDTO> {
 
-	public SelectionService(SettingsRepository repository) {
+	public SettingsService(SettingsRepository repository) {
 		super(repository);
 	}
 
