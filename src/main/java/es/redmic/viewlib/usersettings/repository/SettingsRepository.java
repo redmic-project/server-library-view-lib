@@ -36,4 +36,10 @@ public class SettingsRepository extends SettingsRepositoryImpl<Settings, SimpleQ
 	public SettingsRepository() {
 		super();
 	}
+
+	@Override
+	protected boolean rollbackIsRequired(Settings currentModel, Settings modelToIndex) {
+
+		return currentModel.getUpdated().getMillis() > modelToIndex.getUpdated().getMillis();
+	}
 }
