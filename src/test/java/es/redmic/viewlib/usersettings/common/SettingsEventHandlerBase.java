@@ -21,8 +21,10 @@ package es.redmic.viewlib.usersettings.common;
  */
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +33,7 @@ import org.joda.time.DateTime;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mapstruct.factory.Mappers;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaHandler;
@@ -53,6 +56,7 @@ import es.redmic.usersettingslib.events.delete.DeleteSettingsFailedEvent;
 import es.redmic.usersettingslib.events.deselect.DeselectConfirmedEvent;
 import es.redmic.usersettingslib.events.deselect.DeselectEvent;
 import es.redmic.usersettingslib.events.deselect.DeselectFailedEvent;
+import es.redmic.usersettingslib.events.fail.SettingsRollbackEvent;
 import es.redmic.usersettingslib.events.save.SaveSettingsConfirmedEvent;
 import es.redmic.usersettingslib.events.save.SaveSettingsEvent;
 import es.redmic.usersettingslib.events.save.SaveSettingsFailedEvent;
@@ -66,6 +70,7 @@ import es.redmic.viewlib.usersettings.repository.SettingsRepository;
 
 public abstract class SettingsEventHandlerBase extends IntegrationTestBase {
 
+	@Mock
 	@Autowired
 	SettingsRepository repository;
 
@@ -286,6 +291,223 @@ public abstract class SettingsEventHandlerBase extends IntegrationTestBase {
 
 		assertNotNull(confirm);
 		assertEquals(SettingsEventTypes.SAVE_FAILED, confirm.getType());
+	}
+
+	// Rollback
+
+	@Test(expected = ItemNotFoundException.class)
+	public void sendSettingsRollbackEvent_PublishSaveSettingsFailedEvent_IfFailEventTypeIsSave() throws Exception {
+
+		SettingsRollbackEvent event = SettingsDataUtil.getSettingsRollbackEvent();
+
+		Settings lastSnapshotSettings = Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem());
+		
+		event.setLastSnapshotItem(null);
+
+		repository.save(lastSnapshotSettings);
+
+		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(SETTINGS_TOPIC, event.getAggregateId(),
+				event);
+		future.addCallback(new SendListener());
+
+		Event confirm = (Event) blockingQueue.poll(50, TimeUnit.SECONDS);
+
+		assertNotNull(confirm);
+		assertEquals(SettingsEventTypes.SAVE_FAILED, confirm.getType());
+
+		repository.findById(lastSnapshotSettings.getId()).get_source();
+	}
+
+	@Test
+	public void sendSettingsRollbackEvent_PublishSaveSettingsFailedEventAndDoRollback_IfFailEventTypeIsSaveAndLastSnapshotItemIsDifferent()
+			throws Exception {
+
+		SettingsRollbackEvent event = SettingsDataUtil.getSettingsRollbackEvent();
+
+		Settings lastSnapshotSettings = Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem());
+
+		lastSnapshotSettings.setUpdated(DateTime.now());
+		lastSnapshotSettings.setName("other");
+
+		assertNotEquals(event.getLastSnapshotItem(), lastSnapshotSettings);
+
+		repository.save(lastSnapshotSettings);
+
+		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(SETTINGS_TOPIC, event.getAggregateId(),
+				event);
+		future.addCallback(new SendListener());
+
+		Event confirm = (Event) blockingQueue.poll(50, TimeUnit.SECONDS);
+
+		assertNotNull(confirm);
+		assertEquals(SettingsEventTypes.SAVE_FAILED, confirm.getType());
+
+		Settings newSettings = (Settings) repository.findById(lastSnapshotSettings.getId()).get_source();
+		assertEquals(lastSnapshotSettings, newSettings);
+
+		repository.delete(lastSnapshotSettings.getId());
+	}
+
+	@Test
+	public void sendSettingsRollbackEvent_PublishDeleteSettingsFailedEvent_IfFailEventTypeIsDelete() throws Exception {
+
+		SettingsRollbackEvent event = SettingsDataUtil.getSettingsRollbackEvent(UUID.randomUUID().toString(),
+				SettingsEventTypes.DELETE);
+
+		Settings lastSnapshotSettings = Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem());
+
+		repository.save(lastSnapshotSettings);
+
+		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(SETTINGS_TOPIC, event.getAggregateId(),
+				event);
+		future.addCallback(new SendListener());
+
+		Event confirm = (Event) blockingQueue.poll(50, TimeUnit.SECONDS);
+
+		assertNotNull(confirm);
+		assertEquals(SettingsEventTypes.DELETE_FAILED, confirm.getType());
+
+		Settings newSettings = (Settings) repository.findById(lastSnapshotSettings.getId()).get_source();
+		assertEquals(lastSnapshotSettings, newSettings);
+
+		repository.delete(lastSnapshotSettings.getId());
+	}
+
+	@Test
+	public void sendSettingsRollbackEvent_PublishDeleteSettingsFailedEventAndDoRollback_IfFailEventTypeIsDeleteAndLastSnapshotItemIsDifferent()
+			throws Exception {
+
+		SettingsRollbackEvent event = SettingsDataUtil.getSettingsRollbackEvent(UUID.randomUUID().toString(),
+				SettingsEventTypes.DELETE);
+
+		Settings lastSnapshotSettings = Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem());
+
+		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(SETTINGS_TOPIC, event.getAggregateId(),
+				event);
+		future.addCallback(new SendListener());
+
+		Event confirm = (Event) blockingQueue.poll(50, TimeUnit.SECONDS);
+
+		assertNotNull(confirm);
+		assertEquals(SettingsEventTypes.DELETE_FAILED, confirm.getType());
+
+		Settings newSettings = (Settings) repository.findById(lastSnapshotSettings.getId()).get_source();
+		assertEquals(lastSnapshotSettings, newSettings);
+
+		repository.delete(lastSnapshotSettings.getId());
+	}
+
+	@Test
+	public void sendSettingsRollbackEvent_PublishSelectSettingsFailedEvent_IfFailEventTypeIsSelect() throws Exception {
+
+		SettingsRollbackEvent event = SettingsDataUtil.getSettingsRollbackEvent(UUID.randomUUID().toString(),
+				SettingsEventTypes.SELECT);
+
+		Settings lastSnapshotSettings = Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem());
+
+		repository.save(lastSnapshotSettings);
+
+		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(SETTINGS_TOPIC, event.getAggregateId(),
+				event);
+		future.addCallback(new SendListener());
+
+		Event confirm = (Event) blockingQueue.poll(50, TimeUnit.SECONDS);
+
+		assertNotNull(confirm);
+		assertEquals(SettingsEventTypes.SELECT_FAILED, confirm.getType());
+
+		Settings newSettings = (Settings) repository.findById(lastSnapshotSettings.getId()).get_source();
+		assertEquals(lastSnapshotSettings, newSettings);
+
+		repository.delete(lastSnapshotSettings.getId());
+	}
+
+	@Test
+	public void sendSettingsRollbackEvent_PublishSelectSettingsFailedEventAndDoRollback_IfFailEventTypeIsSelectAndLastSnapshotItemIsDifferent()
+			throws Exception {
+
+		SettingsRollbackEvent event = SettingsDataUtil.getSettingsRollbackEvent(UUID.randomUUID().toString(),
+				SettingsEventTypes.SELECT);
+
+		Settings lastSnapshotSettings = Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem());
+
+		lastSnapshotSettings.setUpdated(DateTime.now());
+		lastSnapshotSettings.setName("other");
+
+		assertNotEquals(event.getLastSnapshotItem(), lastSnapshotSettings);
+
+		repository.save(lastSnapshotSettings);
+
+		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(SETTINGS_TOPIC, event.getAggregateId(),
+				event);
+		future.addCallback(new SendListener());
+
+		Event confirm = (Event) blockingQueue.poll(50, TimeUnit.SECONDS);
+
+		assertNotNull(confirm);
+		assertEquals(SettingsEventTypes.SELECT_FAILED, confirm.getType());
+
+		Settings newSettings = (Settings) repository.findById(lastSnapshotSettings.getId()).get_source();
+		assertEquals(lastSnapshotSettings, newSettings);
+
+		repository.delete(lastSnapshotSettings.getId());
+	}
+
+	@Test
+	public void sendSettingsRollbackEvent_PublishDeselectSettingsFailedEvent_IfFailEventTypeIsDeselect()
+			throws Exception {
+
+		SettingsRollbackEvent event = SettingsDataUtil.getSettingsRollbackEvent(UUID.randomUUID().toString(),
+				SettingsEventTypes.DESELECT);
+
+		Settings lastSnapshotSettings = Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem());
+
+		repository.save(lastSnapshotSettings);
+
+		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(SETTINGS_TOPIC, event.getAggregateId(),
+				event);
+		future.addCallback(new SendListener());
+
+		Event confirm = (Event) blockingQueue.poll(50, TimeUnit.SECONDS);
+
+		assertNotNull(confirm);
+		assertEquals(SettingsEventTypes.DESELECT_FAILED, confirm.getType());
+
+		Settings newSettings = (Settings) repository.findById(lastSnapshotSettings.getId()).get_source();
+		assertEquals(lastSnapshotSettings, newSettings);
+
+		repository.delete(lastSnapshotSettings.getId());
+	}
+
+	@Test
+	public void sendSettingsRollbackEvent_PublishDeselectSettingsFailedEventAndDoRollback_IfFailEventTypeIsDeselectAndLastSnapshotItemIsDifferent()
+			throws Exception {
+
+		SettingsRollbackEvent event = SettingsDataUtil.getSettingsRollbackEvent(UUID.randomUUID().toString(),
+				SettingsEventTypes.DESELECT);
+
+		Settings lastSnapshotSettings = Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem());
+
+		lastSnapshotSettings.setUpdated(DateTime.now());
+		lastSnapshotSettings.setName("other");
+
+		assertNotEquals(event.getLastSnapshotItem(), lastSnapshotSettings);
+
+		repository.save(lastSnapshotSettings);
+
+		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(SETTINGS_TOPIC, event.getAggregateId(),
+				event);
+		future.addCallback(new SendListener());
+
+		Event confirm = (Event) blockingQueue.poll(50, TimeUnit.SECONDS);
+
+		assertNotNull(confirm);
+		assertEquals(SettingsEventTypes.DESELECT_FAILED, confirm.getType());
+
+		Settings newSettings = (Settings) repository.findById(lastSnapshotSettings.getId()).get_source();
+		assertEquals(lastSnapshotSettings, newSettings);
+
+		repository.delete(lastSnapshotSettings.getId());
 	}
 
 	@KafkaHandler
