@@ -301,7 +301,29 @@ public abstract class SettingsEventHandlerBase extends IntegrationTestBase {
 		SettingsRollbackEvent event = SettingsDataUtil.getSettingsRollbackEvent();
 
 		Settings lastSnapshotSettings = Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem());
-		
+
+		event.setLastSnapshotItem(null);
+
+		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(SETTINGS_TOPIC, event.getAggregateId(),
+				event);
+		future.addCallback(new SendListener());
+
+		Event confirm = (Event) blockingQueue.poll(50, TimeUnit.SECONDS);
+
+		assertNotNull(confirm);
+		assertEquals(SettingsEventTypes.SAVE_FAILED, confirm.getType());
+
+		repository.findById(lastSnapshotSettings.getId()).get_source();
+	}
+
+	@Test(expected = ItemNotFoundException.class)
+	public void sendSettingsRollbackEvent_PublishSaveSettingsFailedEventAndDoRollback_IfFailEventTypeIsSaveAndLastSnapshotItemIsDifferent()
+			throws Exception {
+
+		SettingsRollbackEvent event = SettingsDataUtil.getSettingsRollbackEvent();
+
+		Settings lastSnapshotSettings = Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem());
+
 		event.setLastSnapshotItem(null);
 
 		repository.save(lastSnapshotSettings);
@@ -316,36 +338,6 @@ public abstract class SettingsEventHandlerBase extends IntegrationTestBase {
 		assertEquals(SettingsEventTypes.SAVE_FAILED, confirm.getType());
 
 		repository.findById(lastSnapshotSettings.getId()).get_source();
-	}
-
-	@Test
-	public void sendSettingsRollbackEvent_PublishSaveSettingsFailedEventAndDoRollback_IfFailEventTypeIsSaveAndLastSnapshotItemIsDifferent()
-			throws Exception {
-
-		SettingsRollbackEvent event = SettingsDataUtil.getSettingsRollbackEvent();
-
-		Settings lastSnapshotSettings = Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem());
-
-		lastSnapshotSettings.setUpdated(DateTime.now());
-		lastSnapshotSettings.setName("other");
-
-		assertNotEquals(event.getLastSnapshotItem(), lastSnapshotSettings);
-
-		repository.save(lastSnapshotSettings);
-
-		ListenableFuture<SendResult<String, Event>> future = kafkaTemplate.send(SETTINGS_TOPIC, event.getAggregateId(),
-				event);
-		future.addCallback(new SendListener());
-
-		Event confirm = (Event) blockingQueue.poll(50, TimeUnit.SECONDS);
-
-		assertNotNull(confirm);
-		assertEquals(SettingsEventTypes.SAVE_FAILED, confirm.getType());
-
-		Settings newSettings = (Settings) repository.findById(lastSnapshotSettings.getId()).get_source();
-		assertEquals(lastSnapshotSettings, newSettings);
-
-		repository.delete(lastSnapshotSettings.getId());
 	}
 
 	@Test
@@ -431,7 +423,7 @@ public abstract class SettingsEventHandlerBase extends IntegrationTestBase {
 
 		Settings lastSnapshotSettings = Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem());
 
-		lastSnapshotSettings.setUpdated(DateTime.now());
+		lastSnapshotSettings.setUpdated(lastSnapshotSettings.getUpdated().plusDays(1));
 		lastSnapshotSettings.setName("other");
 
 		assertNotEquals(event.getLastSnapshotItem(), lastSnapshotSettings);
@@ -448,7 +440,7 @@ public abstract class SettingsEventHandlerBase extends IntegrationTestBase {
 		assertEquals(SettingsEventTypes.SELECT_FAILED, confirm.getType());
 
 		Settings newSettings = (Settings) repository.findById(lastSnapshotSettings.getId()).get_source();
-		assertEquals(lastSnapshotSettings, newSettings);
+		assertEquals(Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem()), newSettings);
 
 		repository.delete(lastSnapshotSettings.getId());
 	}
@@ -488,7 +480,7 @@ public abstract class SettingsEventHandlerBase extends IntegrationTestBase {
 
 		Settings lastSnapshotSettings = Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem());
 
-		lastSnapshotSettings.setUpdated(DateTime.now());
+		lastSnapshotSettings.setUpdated(lastSnapshotSettings.getUpdated().plusDays(1));
 		lastSnapshotSettings.setName("other");
 
 		assertNotEquals(event.getLastSnapshotItem(), lastSnapshotSettings);
@@ -505,7 +497,7 @@ public abstract class SettingsEventHandlerBase extends IntegrationTestBase {
 		assertEquals(SettingsEventTypes.DESELECT_FAILED, confirm.getType());
 
 		Settings newSettings = (Settings) repository.findById(lastSnapshotSettings.getId()).get_source();
-		assertEquals(lastSnapshotSettings, newSettings);
+		assertEquals(Mappers.getMapper(SettingsESMapper.class).map(event.getLastSnapshotItem()), newSettings);
 
 		repository.delete(lastSnapshotSettings.getId());
 	}
