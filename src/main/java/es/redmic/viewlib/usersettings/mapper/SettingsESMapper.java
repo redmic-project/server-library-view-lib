@@ -1,4 +1,4 @@
-package es.redmic.viewlib.common.mapper.es2dto;
+package es.redmic.viewlib.usersettings.mapper;
 
 /*-
  * #%L
@@ -20,18 +20,16 @@ package es.redmic.viewlib.common.mapper.es2dto;
  * #L%
  */
 
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
 
-import es.redmic.models.es.common.dto.AggregationsDTO;
-import es.redmic.models.es.geojson.common.model.Aggregations;
-import ma.glasnost.orika.CustomMapper;
-import ma.glasnost.orika.MappingContext;
+import es.redmic.usersettingslib.dto.SettingsDTO;
+import es.redmic.usersettingslib.model.Settings;
+import es.redmic.viewlib.common.mapper.es2dto.DataCollectionESMapper;
 
-@Component
-public class AggregationsESMapper extends CustomMapper<Aggregations, AggregationsDTO> {
+@Mapper
+public abstract class SettingsESMapper extends DataCollectionESMapper<SettingsDTO, Settings> {
 
-	@Override
-	public void mapAtoB(Aggregations a, AggregationsDTO b, MappingContext context) {
-		b.setAttributes(a.getAttributes());
-	}
+	public abstract SettingsDTO map(Settings model);
+
+	public abstract Settings map(SettingsDTO dto);
 }

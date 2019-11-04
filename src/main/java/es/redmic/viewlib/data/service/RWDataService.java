@@ -47,4 +47,8 @@ public abstract class RWDataService<TModel extends BaseES<?>, TDTO extends Commo
 	public EventApplicationResult delete(String id) {
 		return repository.delete(id);
 	}
+
+	public EventApplicationResult rollback(TModel model, String id) {
+		return repository.rollback(model, id);
+	}
 }

@@ -23,11 +23,12 @@ package es.redmic.viewlib.geodata.service;
 import java.util.List;
 
 import es.redmic.brokerlib.avro.geodata.common.FeatureDTO;
-import es.redmic.models.es.common.dto.AggregationsDTO;
 import es.redmic.models.es.common.query.dto.MgetDTO;
 import es.redmic.models.es.common.query.dto.SimpleQueryDTO;
 import es.redmic.models.es.geojson.base.Feature;
 import es.redmic.models.es.geojson.common.dto.GeoJSONFeatureCollectionDTO;
+import es.redmic.models.es.geojson.wrapper.GeoHitWrapper;
+import es.redmic.models.es.geojson.wrapper.GeoHitsWrapper;
 import es.redmic.models.es.geojson.wrapper.GeoSearchWrapper;
 import es.redmic.viewlib.common.service.RBaseService;
 import es.redmic.viewlib.geodata.dto.GeoMetaDTO;
@@ -48,7 +49,7 @@ public abstract class RGeoDataService<TModel extends Feature<?, ?>, TDTO extends
 		// TODO: comprobar mediante microservicio de credenciales que este usuario puede
 		// buscar
 
-		return mapper.getMapperFacade().map(repository.findById(id), GeoMetaDTO.class, getMappingContext());
+		return viewResultToDTO(repository.findById(id));
 	}
 
 	@Override
@@ -66,8 +67,7 @@ public abstract class RGeoDataService<TModel extends Feature<?, ?>, TDTO extends
 		// TODO: comprobar mediante microservicio de credenciales que este usuario puede
 		// buscar
 
-		return mapper.getMapperFacade().map(repository.mget(dto), GeoJSONFeatureCollectionDTO.class,
-				getMappingContext());
+		return viewResultToDTO(repository.mget(dto));
 	}
 
 	@Override
@@ -76,16 +76,12 @@ public abstract class RGeoDataService<TModel extends Feature<?, ?>, TDTO extends
 		// TODO: comprobar mediante microservicio de credenciales que este usuario puede
 		// buscar
 
-		GeoSearchWrapper<?> result = repository.find(query);
-
-		GeoJSONFeatureCollectionDTO collection = mapper.getMapperFacade().map(result.getHits(),
-				GeoJSONFeatureCollectionDTO.class, getMappingContext());
-
-		if (result.getAggregations() != null) {
-			collection.set_aggs(
-					mapper.getMapperFacade().map(result.getAggregations(), AggregationsDTO.class, getMappingContext()));
-		}
-
-		return collection;
+		return viewResultToDTO(repository.find(query));
 	}
+
+	protected abstract GeoMetaDTO<?> viewResultToDTO(GeoHitWrapper<?> geoHitWrapper);
+
+	protected abstract GeoJSONFeatureCollectionDTO viewResultToDTO(GeoSearchWrapper<?> viewResult);
+
+	protected abstract GeoJSONFeatureCollectionDTO viewResultToDTO(GeoHitsWrapper<?> viewResult);
 }

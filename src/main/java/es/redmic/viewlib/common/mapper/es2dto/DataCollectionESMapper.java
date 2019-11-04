@@ -1,5 +1,7 @@
 package es.redmic.viewlib.common.mapper.es2dto;
 
+import es.redmic.brokerlib.avro.common.CommonDTO;
+
 /*-
  * #%L
  * view-lib
@@ -20,23 +22,29 @@ package es.redmic.viewlib.common.mapper.es2dto;
  * #L%
  */
 
-import org.springframework.stereotype.Component;
-
 import es.redmic.models.es.common.dto.JSONCollectionDTO;
+import es.redmic.models.es.common.model.BaseES;
 import es.redmic.models.es.data.common.model.DataHitsWrapper;
-import es.redmic.viewlib.data.dto.MetaDTO;
-import ma.glasnost.orika.CustomMapper;
-import ma.glasnost.orika.MappingContext;
+import es.redmic.models.es.data.common.model.DataSearchWrapper;
 
-@SuppressWarnings("rawtypes")
-@Component
-public class DataCollectionESMapper extends CustomMapper<DataHitsWrapper, JSONCollectionDTO> {
+public abstract class DataCollectionESMapper<TDTO extends CommonDTO, TModel extends BaseES<?>>
+		extends DataItemESMapper<TDTO, TModel> {
 
-	@SuppressWarnings("unchecked")
-	@Override
-	public void mapAtoB(DataHitsWrapper a, JSONCollectionDTO b, MappingContext context) {
-		b.setData(mapperFacade.mapAsList(a.getHits(), MetaDTO.class, context));
-		b.get_meta().setMax_score(a.getMax_score());
-		b.setTotal(a.getTotal());
+	@SuppressWarnings({ "rawtypes" })
+	public JSONCollectionDTO map(DataSearchWrapper dataSearchWrapper) {
+
+		JSONCollectionDTO result = map(dataSearchWrapper.getHits());
+		result.set_aggs(getAggs(dataSearchWrapper));
+		return result;
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public JSONCollectionDTO map(DataHitsWrapper dataHitsWrapper) {
+
+		JSONCollectionDTO result = new JSONCollectionDTO();
+		result.setData(mapList(dataHitsWrapper.getHits()));
+		result.get_meta().setMax_score(dataHitsWrapper.getMax_score());
+		result.setTotal(dataHitsWrapper.getTotal());
+		return result;
 	}
 }

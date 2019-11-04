@@ -38,4 +38,6 @@ public interface IBaseRepository<TModel extends BaseES<?>> {
 	public EventApplicationResult update(TModel modelToIndex);
 
 	public EventApplicationResult delete(String id);
+
+	public EventApplicationResult rollback(TModel modelToIndex, String id);
 }
