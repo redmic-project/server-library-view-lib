@@ -36,17 +36,17 @@ import es.redmic.models.es.common.query.dto.GeoDataQueryDTO;
 import es.redmic.models.es.common.query.dto.MetadataQueryDTO;
 import es.redmic.models.es.common.query.dto.SimpleQueryDTO;
 import es.redmic.models.es.common.view.JsonViewsForQueryDTO;
-import es.redmic.restlib.common.service.UserUtilsServiceItfc;
+import es.redmic.restlib.config.UserService;
 
 public class QueryDTOMessageConverter extends MappingJackson2HttpMessageConverter {
 
-	UserUtilsServiceItfc userService;
+	UserService userService;
 
 	public QueryDTOMessageConverter() {
 		super();
 	}
 
-	public QueryDTOMessageConverter(ObjectMapper objectMapper, UserUtilsServiceItfc userService) {
+	public QueryDTOMessageConverter(ObjectMapper objectMapper, UserService userService) {
 		super(objectMapper);
 		this.userService = userService;
 	}

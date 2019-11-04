@@ -1,0 +1,27 @@
+{
+	"total": 1,
+	"_meta": {
+		"max_score": null
+	},
+	"_aggs": {
+		
+	},
+	"data": [
+		{
+			"_meta": {
+				"score": 1.0,
+				"version": 1,
+				"highlight": null
+			},
+			"id": "settings-a31bd54e-836e-4942-b10b-8d7bdbd6f196",
+			"name": "prueba",
+			"shared": false,
+			"service": "atlas",
+			"userId": "7",
+			"selection": ["atlas-b31bd54e-936e-5942-c10b-9d7bdbd6f194"],
+			"inserted": "2017-05-23T12:35:12.052+00:00",
+			"updated": "2017-05-23T12:35:12.052+00:00",
+			"accessed": "2017-05-23T12:35:12.052+00:00"
+		}
+	]
+}

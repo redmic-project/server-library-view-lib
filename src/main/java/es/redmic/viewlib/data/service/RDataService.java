@@ -24,19 +24,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import es.redmic.brokerlib.avro.common.CommonDTO;
 import es.redmic.exception.common.ExceptionType;
 import es.redmic.exception.common.InternalException;
-import es.redmic.models.es.common.dto.AggregationsDTO;
 import es.redmic.models.es.common.dto.JSONCollectionDTO;
 import es.redmic.models.es.common.model.BaseES;
 import es.redmic.models.es.common.query.dto.MgetDTO;
 import es.redmic.models.es.common.query.dto.SimpleQueryDTO;
+import es.redmic.models.es.data.common.model.DataHitWrapper;
+import es.redmic.models.es.data.common.model.DataHitsWrapper;
 import es.redmic.models.es.data.common.model.DataSearchWrapper;
 import es.redmic.viewlib.common.service.RBaseService;
-import es.redmic.viewlib.config.MapperScanBeanItfc;
 import es.redmic.viewlib.data.dto.MetaDTO;
 import es.redmic.viewlib.data.repository.IDataRepository;
 
@@ -45,9 +43,6 @@ public abstract class RDataService<TModel extends BaseES<?>, TDTO extends Common
 
 	IDataRepository<TModel, TQueryDTO> repository;
 
-	@Autowired
-	protected MapperScanBeanItfc mapper;
-
 	public RDataService(IDataRepository<TModel, TQueryDTO> repository) {
 		this.repository = repository;
 	}
@@ -55,7 +50,7 @@ public abstract class RDataService<TModel extends BaseES<?>, TDTO extends Common
 	@Override
 	public MetaDTO<?> findById(String id) {
 
-		return mapper.getMapperFacade().map(repository.findById(id), MetaDTO.class, getMappingContext());
+		return viewResultToDTO(repository.findById(id));
 	}
 
 	@Override
@@ -79,17 +74,13 @@ public abstract class RDataService<TModel extends BaseES<?>, TDTO extends Common
 
 		processQuery(query, fixedQuery, fieldsExcludedOnQuery);
 
-		DataSearchWrapper<?> result = repository.find(query);
-
-		JSONCollectionDTO collection = mapper.getMapperFacade().map(result.getHits(), JSONCollectionDTO.class);
-		collection.set_aggs(mapper.getMapperFacade().map(result.getAggregations(), AggregationsDTO.class));
-		return collection;
+		return viewResultToDTO(repository.find(query));
 	}
 
 	@Override
 	public JSONCollectionDTO mget(MgetDTO dto) {
 
-		return mapper.getMapperFacade().map(repository.mget(dto), JSONCollectionDTO.class);
+		return viewResultToDTO(repository.mget(dto));
 	}
 
 	@Override
@@ -114,6 +105,12 @@ public abstract class RDataService<TModel extends BaseES<?>, TDTO extends Common
 		processQuery(queryDTO, fixedQuery, fieldsExcludedOnQuery);
 		return repository.suggest(queryDTO);
 	}
+
+	protected abstract MetaDTO<?> viewResultToDTO(DataHitWrapper<?> viewResult);
+
+	protected abstract JSONCollectionDTO viewResultToDTO(DataSearchWrapper<?> viewResult);
+
+	protected abstract JSONCollectionDTO viewResultToDTO(DataHitsWrapper<?> viewResult);
 
 	@Override
 	protected String[] getDefaultSearchFields() {

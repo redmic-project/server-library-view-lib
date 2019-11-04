@@ -23,30 +23,32 @@ package es.redmic.viewlib.common.mapper.es2dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import es.redmic.brokerlib.avro.common.CommonDTO;
-import es.redmic.models.es.common.model.BaseES;
-import es.redmic.models.es.data.common.model.DataHitWrapper;
-import es.redmic.viewlib.data.dto.MetaDTO;
+import org.locationtech.jts.geom.Geometry;
 
-public abstract class DataItemESMapper<TDTO extends CommonDTO, TModel extends BaseES<?>>
+import es.redmic.brokerlib.avro.geodata.common.FeatureDTO;
+import es.redmic.brokerlib.avro.geodata.common.PropertiesBaseDTO;
+import es.redmic.models.es.common.model.BaseES;
+import es.redmic.models.es.geojson.wrapper.GeoHitWrapper;
+import es.redmic.viewlib.geodata.dto.GeoMetaDTO;
+
+public abstract class FeatureESMapper<TDTO extends FeatureDTO<PropertiesBaseDTO, Geometry>, TModel extends BaseES<?>>
 		extends BaseESMapper<TDTO, TModel> {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public List<MetaDTO<TDTO>> mapList(List<DataHitWrapper> dataHitWrapper) {
+	public List<GeoMetaDTO<TDTO>> mapList(List<GeoHitWrapper> geoHitWrapper) {
 
-		List<MetaDTO<TDTO>> list = new ArrayList<MetaDTO<TDTO>>();
-		for (DataHitWrapper<TModel> entity : dataHitWrapper) {
+		List<GeoMetaDTO<TDTO>> list = new ArrayList<GeoMetaDTO<TDTO>>();
+		for (GeoHitWrapper<TModel> entity : geoHitWrapper) {
 			list.add(map(entity));
 		}
 		return list;
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public MetaDTO map(DataHitWrapper dataHitWrapper) {
+	public GeoMetaDTO<TDTO> map(GeoHitWrapper<TModel> geoHitWrapper) {
 
-		MetaDTO<TDTO> result = new MetaDTO<TDTO>();
-		result.set_meta(getMetaDataDTO(dataHitWrapper));
-		result.set_source(mapSource((TModel) dataHitWrapper.get_source()));
+		GeoMetaDTO<TDTO> result = new GeoMetaDTO<TDTO>();
+		result.set_meta(getMetaDataDTO(geoHitWrapper));
+		result.set_source(mapSource(geoHitWrapper.get_source()));
 		return result;
 	}
 }
