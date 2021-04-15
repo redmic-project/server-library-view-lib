@@ -13,13 +13,13 @@
 	<groupId>es.redmic.lib</groupId>
 	<artifactId>view-lib</artifactId>
 	<packaging>jar</packaging>
-	<version>0.11.0</version>
+	<version>0.11.0-feature-TimeSeriesMicroservice</version>
 	<name>view-lib</name>
 
 	<properties>
 		<!-- REDMIC -->
 		<redmic.rest-lib.version>0.11.0</redmic.rest-lib.version>
-		<redmic.models.version>0.11.0</redmic.models.version>
+		<redmic.models.version>0.11.0-feature-cleanTimeSeries</redmic.models.version>
 		<redmic.broker-lib.version>0.11.0</redmic.broker-lib.version>
 		<redmic.user-settings-lib.version>0.2.0</redmic.user-settings-lib.version>
 		<redmic.test-utils.version>0.10.0</redmic.test-utils.version>
@@ -59,7 +59,7 @@
 			<artifactId>mapstruct</artifactId>
 			<version>${mapstruct.version}</version>
 		</dependency>
-		
+
 		<!-- Test -->
 		<dependency>
 			<groupId>es.redmic.lib</groupId>
@@ -67,7 +67,7 @@
 			<version>${redmic.test-utils.version}</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>es.redmic.lib</groupId>
 			<artifactId>user-settings-lib</artifactId>
