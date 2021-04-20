@@ -66,7 +66,7 @@ public abstract class RController<TModel extends BaseES<?>, TDTO extends CommonD
 		defineTypeOfArguments();
 	}
 
-	@GetMapping(value = { "${controller.mapping.FILTER_SCHEMA}" })
+	@GetMapping(value = { "${controller.mapping.FILTER_SCHEMA}", "${controller.mapping.ADDITIONAL_SCHEMA}" })
 	@ResponseBody
 	public ElasticSearchDTO getFilterSchema() {
 
