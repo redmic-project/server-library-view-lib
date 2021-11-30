@@ -19,7 +19,7 @@
 	<properties>
 		<!-- REDMIC -->
 		<redmic.rest-lib.version>0.11.0</redmic.rest-lib.version>
-		<redmic.models.version>0.11.0-feature-cleanTimeSeries</redmic.models.version>
+		<redmic.models.version>0.13.0</redmic.models.version>
 		<redmic.broker-lib.version>0.11.0</redmic.broker-lib.version>
 		<redmic.user-settings-lib.version>0.2.0</redmic.user-settings-lib.version>
 		<redmic.test-utils.version>0.10.0</redmic.test-utils.version>
