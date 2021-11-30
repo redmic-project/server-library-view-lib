@@ -12,9 +12,9 @@ import java.util.Map;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -29,6 +29,7 @@ import es.redmic.models.es.common.dto.MetaDataDTO;
 import es.redmic.models.es.common.model.BaseES;
 import es.redmic.models.es.common.model.HitWrapper;
 import es.redmic.models.es.common.model.SearchWrapper;
+import es.redmic.models.es.geojson.common.model.Aggregations;
 
 public abstract class BaseESMapper<TDTO extends CommonDTO, TModel extends BaseES<?>> {
 
@@ -43,20 +44,25 @@ public abstract class BaseESMapper<TDTO extends CommonDTO, TModel extends BaseES
 		return _meta;
 	}
 
-	AggregationsDTO getAggs(SearchWrapper wrapper) {
+	protected AggregationsDTO getAggs(SearchWrapper wrapper) {
+
+		return getAggs(wrapper.getAggregations());
+	}
+
+	protected AggregationsDTO getAggs(Aggregations aggregations) {
 
 		AggregationsDTO aggs = new AggregationsDTO();
 
-		if (wrapper.getAggregations() == null || wrapper.getAggregations().getAttributes().isEmpty())
+		if (aggregations == null || aggregations.getAttributes().isEmpty())
 			return aggs;
 
-		aggs.setAttributes(getCleanAttributes(wrapper.getAggregations().getAttributes()));
+		aggs.setAttributes(getCleanAttributes(aggregations.getAttributes()));
 
 		return aggs;
 	}
 
 	@SuppressWarnings("unchecked")
-	private Map<String, Object> getCleanAttributes(Map<String, Object> source) {
+	protected Map<String, Object> getCleanAttributes(Map<String, Object> source) {
 
 		Map<String, Object> attrs = new HashMap<>();
 
