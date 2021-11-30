@@ -9,9 +9,9 @@ package es.redmic.viewlib.common.controller;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -33,8 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.util.concurrent.ListenableFuture;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import es.redmic.brokerlib.avro.common.CommonDTO;
@@ -56,18 +55,18 @@ public abstract class RController<TModel extends BaseES<?>, TDTO extends CommonD
 
 	protected Class<TQueryDTO> typeOfTQueryDTO;
 
-	protected Set<String> fieldsExcludedOnQuery = new HashSet<String>();
+	protected Set<String> fieldsExcludedOnQuery = new HashSet<>();
 
-	protected Map<String, Object> fixedQuery = new HashMap<String, Object>();
+	protected Map<String, Object> fixedQuery = new HashMap<>();
 
 	IBaseService<TModel, TDTO, TQueryDTO> service;
 
-	public RController(IBaseService<TModel, TDTO, TQueryDTO> service) {
+	protected RController(IBaseService<TModel, TDTO, TQueryDTO> service) {
 		this.service = service;
 		defineTypeOfArguments();
 	}
 
-	@RequestMapping(value = { "${controller.mapping.FILTER_SCHEMA}" }, method = RequestMethod.GET)
+	@GetMapping(value = { "${controller.mapping.FILTER_SCHEMA}", "${controller.mapping.ADDITIONAL_SCHEMA}" })
 	@ResponseBody
 	public ElasticSearchDTO getFilterSchema() {
 
@@ -89,6 +88,8 @@ public abstract class RController<TModel extends BaseES<?>, TDTO extends CommonD
 			this.typeOfTDTO = (Class<TDTO>) (arguments[1]);
 			this.typeOfTQueryDTO = (Class<TQueryDTO>) (arguments[2]);
 			break;
+		default:
+			logger.error("Número de argumentos no válido.");
 		}
 	}
 
